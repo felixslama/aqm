@@ -3,6 +3,8 @@
 
 const char* ssid     = "aqm";
 const char* password = "TSMCTSMC";
+long previousWifiMillis = 0;
+long intervalWifi = 500;
 
 void initWifi(){
     WiFi.begin(ssid,password);
@@ -12,6 +14,9 @@ void initWifi(){
     }
 }
 void wifiCheck(){
-    Serial.println(String(WiFi.status()));
-    delay(500);
+    unsigned long currentWifiMillis = millis();
+    if(currentWifiMillis - previousWifiMillis > intervalWifi) {
+        previousWifiMillis = currentWifiMillis;
+        Serial.println(String(WiFi.status()));
+    }
 }

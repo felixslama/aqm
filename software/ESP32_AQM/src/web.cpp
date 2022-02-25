@@ -39,9 +39,6 @@ void handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size
 
 void initWeb(){
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send_P(200, "text/html", aetherIndex);
-    });
-    server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(200, "text/html", updateIndex);
     });
     server.on("/doUpdate", HTTP_POST,
