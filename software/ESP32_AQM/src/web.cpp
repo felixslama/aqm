@@ -1,4 +1,3 @@
-#include <WebServer.h>
 #include <ESPAsyncWebServer.h>
 #include <Update.h>
 #include "pages.h"
@@ -39,6 +38,9 @@ void handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size
 
 void initWeb(){
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(200, "text/html", aqmIndex);
+    });
+    server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(200, "text/html", updateIndex);
     });
     server.on("/doUpdate", HTTP_POST,

@@ -3,8 +3,9 @@
 #include "wifi.h"
 
 void setup() {
-  initWeb();
+  Serial.begin(115200);
   initWifi();
+  initWeb();
 }
 
 void loop() {
