@@ -1,12 +1,7 @@
-#include <WiFi.h>
-#include <WiFiClient.h>
 #include <WebServer.h>
 #include <ESPAsyncWebServer.h>
 #include <Update.h>
 #include "pages.h"
-
-const char* ssid     = "aqm";
-const char* password = "TSMCTSMC";
 
 AsyncWebServer server(80);
 
@@ -43,8 +38,6 @@ void handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size
 }
 
 void initWeb(){
-    WiFi.mode(WIFI_AP);
-    WiFi.softAP(ssid, password);
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send_P(200, "text/html", aetherIndex);
     });
