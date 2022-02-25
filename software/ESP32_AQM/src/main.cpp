@@ -1,9 +1,8 @@
 #include <Arduino.h>
+#include "web.h"
 
 void setup() {
-  // put your setup code here, to run once:
+  initWeb();
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-}
+void loop() {}
