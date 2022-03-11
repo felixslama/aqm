@@ -49,5 +49,4 @@ void initWeb(){
         handleDoUpdate(request, filename, index, data, len, final);}
     );
     server.begin();
-    Serial.println("HTTP server started");
 }

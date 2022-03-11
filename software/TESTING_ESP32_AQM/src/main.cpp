@@ -99,17 +99,22 @@ void setup() {
     Serial.println("Local Time synchronized");
     Serial.println(getDateTimeStr());
   }
-   
+
+  if (connectedToWifi) {
+    Serial.println("Starting HTTP Server");
+    initWeb();
+    Serial.println("HTTP server started");
+  }
+
   Serial.println("Connecting MQTT Broker");
   mqttClient = new MQTTClient(boardAddress.c_str(), mqttServer, mqttPort, mqttUsername, mqttPassword, mqttCallback);
   if (mqttClient->connect()) {
     Serial.println("MQTT Broker connected");
   }
-  //initWeb();
 }
 
-
 void loop() {
+  // not very WOH
   if (failCounter > MAX_FAILS) {
     ESP.restart();
   }
@@ -157,7 +162,7 @@ void loop() {
     
     StaticJsonDocument<1024> doc;
     doc[String("Address")] = boardAddress;
-    //doc[String("Timestamp")] = getDateTimeStr();
+    doc[String("Timestamp")] = getDateTimeStr();
 
     doc[String("CO2")] = co2Value;
 
@@ -182,7 +187,7 @@ void loop() {
     }  
   }
   else {
-    //bleServer->disconnect();
+    bleServer->disconnect();
   } 
   delay(500);
 }
