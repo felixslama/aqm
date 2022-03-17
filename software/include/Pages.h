@@ -62,7 +62,7 @@ const char aqmIndex[] PROGMEM = R"=====(
     </head>
     <body>
         <section id="mainContainer">
-            <h1>TSMC > INFINEON</h1>
+            <h1>AQM-WEB</h1>
             <p><a href="/update">Update Page</a></p>
         </section>
     </body>

@@ -1,11 +1,11 @@
 #include <Arduino.h>
-#include "BLE_CO2_Sense_Net.h"
-//#include "WiFiAdapter.h"
-//#include "Utility.h"
-//#include "MQTTClient.h"
-//#include <ArduinoJson.h>
+#include "BLE.h"
+#include <ArduinoJson.h>
+#include "WiFiAdapter.h"
+#include "MQTT.h"
 #include "Credentials.h"
-//#include "Web.h"
+#include "Utility.h"
+#include "Web.h"
 
 // Variables to store the sansor values
 int co2Value;
@@ -29,7 +29,7 @@ boolean newAlarmThresholdValue = false;
 boolean newSampleRateValue = false;
 
 BLECO2SenseNetServer* bleServer = nullptr;
-//WiFiAdapter* wifi = nullptr;
+WiFiAdapter* wifi = nullptr;
 //MQTTClient* mqttClient = nullptr;
 
 boolean enterpriseWifi = false;
@@ -84,102 +84,115 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
 void setup() {
   Serial.begin(115200);
-
-  //initWeb();
-
-  //wifi = new WiFiAdapter();
+  wifi = new WiFiAdapter();
   boolean connectedToWifi = false;
   if (enterpriseWifi) {
-    //connectedToWifi = wifi->connectEnterprise(userEnterprise, passEnterprise, ssidEnterprise);
+    connectedToWifi = wifi->connectEnterprise(userEnterprise, passEnterprise, ssidEnterprise);
   }
   else {
-    //connectedToWifi = wifi->connectPrivate(passPrivate, ssidPrivate);
+    connectedToWifi = wifi->connectPrivate(passPrivate, ssidPrivate);
   }
   
   if (connectedToWifi) {
-    //setDateTime();
+    Serial.println("WiFi connected");
+    setDateTime();
     Serial.println("Local Time synchronized");
-    //Serial.println(getDateTimeStr());
+    Serial.println(getDateTimeStr());
   }
-   
+
+  if (connectedToWifi) {
+    Serial.println("Starting HTTP Server");
+    initWeb();
+    Serial.println("HTTP server started");
+  }
+
+  //Serial.println("Connecting MQTT Broker");
   //mqttClient = new MQTTClient(boardAddress.c_str(), mqttServer, mqttPort, mqttUsername, mqttPassword, mqttCallback);
   //if (mqttClient->connect()) {
+  //  Serial.println("MQTT Broker connected");
   //}
 }
 
-
 void loop() {
-  if (failCounter > MAX_FAILS) {
-    ESP.restart();
-  }
-
-  if (bleServer == nullptr) {
-    bleServer = new BLECO2SenseNetServer(senseNetName); 
-    bleServer->scan();
-  }
-
-  if (!bleServer->found()) {
-    while (!bleServer->found()) {
-      delay(500);
+  if (!checkOTA()) {
+    // not very WOH
+    if (failCounter > MAX_FAILS) {
+      ESP.restart();
     }
-    boardAddress = bleServer->getAddressStr();
-  }
 
-  if (!bleServer->connected()) {
-    Serial.println("Connecting callbacks...");
-    while (!bleServer->connect(co2NotifyCallback, temperatureNotifyCallback, pressureNotifyCallback, humidityNotifyCallback)) {
-      delay(500);
-      Serial.println("Waiting for callbacks");
+    if (bleServer == nullptr) {
+      bleServer = new BLECO2SenseNetServer(senseNetName); 
+      bleServer->scan();
     }
-    boardAddress = bleServer->getAddressStr();
-  }
 
-  Serial.print("\nWaiting for sensor data ");
-  int counter = 0;
-  while (!newCo2Value && !newTemperatureValue && !newPressureValue && !newHumidityValue) {
-    Serial.print(".");
-    counter++;
-    delay(200);
-    if (counter == 20) {
-      failCounter++;
-      break;
+    if (!bleServer->found()) {
+      while (!bleServer->found()) {
+        delay(500);
+      }
+      boardAddress = bleServer->getAddressStr();
     }
-  }
-  newCo2Value = false;
-  newTemperatureValue = false;
-  newPressureValue = false;
-  newHumidityValue = false;
-  
-  if (failCounter == 0) 
-  {
-    Serial.println("ok\n");
+
+    if (!bleServer->connected()) {
+      Serial.println("Connecting callbacks...");
+      while (!bleServer->connect(co2NotifyCallback, temperatureNotifyCallback, pressureNotifyCallback, humidityNotifyCallback)) {
+        delay(500);
+        Serial.println("Waiting for callbacks");
+      }
+      boardAddress = bleServer->getAddressStr();
+    }
+
+    Serial.print("\nWaiting for sensor data ");
+    int counter = 0;
+    while (!newCo2Value && !newTemperatureValue && !newPressureValue && !newHumidityValue) {
+      Serial.print(".");
+      counter++;
+      delay(200);
+      if (counter == 20) {
+        failCounter++;
+        break;
+      }
+    }
+    newCo2Value = false;
+    newTemperatureValue = false;
+    newPressureValue = false;
+    newHumidityValue = false;
     
-    //StaticJsonDocument<1024> doc;
-    //doc[String("Address")] = boardAddress;
-    //doc[String("Timestamp")] = getDateTimeStr();
+    if (failCounter == 0) 
+    {
+      Serial.println("ok\n");
+      
+      StaticJsonDocument<1024> doc;
+      doc[String("Address")] = boardAddress;
+      doc[String("Timestamp")] = getDateTimeStr();
 
-    //doc[String("CO2")] = co2Value;
+      doc[String("CO2")] = co2Value;
 
-    Serial.println();
-    //doc[String("Temperature")] = temperatureValue;
+      Serial.println();
+      doc[String("Temperature")] = temperatureValue;
 
-    //doc[String("Pressure")] = pressureValue;
+      doc[String("Pressure")] = pressureValue;
 
-    //doc[String("Humidity")] = humidityValue;
+      doc[String("Humidity")] = humidityValue;
 
-    String payload = String();
-    //serializeJson(doc, payload);
-    //Serial.printf("\nPayload: %s\n", payload.c_str());
+      doc[String("IP")] = WiFi.localIP();
 
-    Serial.print("Sending payload...");
-    //bool ok = mqttClient->publish("ble_sensor_values", payload.c_str());
-    //Serial.printf("%s\n", ok? "ok":"failed");
-    //if (!ok) {
-    //  failCounter++;   
-    //}  
+      String payload = String();
+      serializeJson(doc, payload);
+      Serial.printf("\nPayload: %s\n", payload.c_str());
+
+      //Serial.print("Sending payload...");
+      //bool ok = mqttClient->publish("ble_sensor_values", payload.c_str());
+      //Serial.printf("%s\n", ok? "ok":"failed");
+      //if (!ok) {
+      //  failCounter++;   
+      //}  
+    }
+    else {
+      bleServer->disconnect();
+    } 
+    delay(500);
   }
   else {
-    //bleServer->disconnect();
-  } 
-  delay(500);
+    Serial.println("OTA was initiated!");
+  }
 }
