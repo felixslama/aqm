@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <PubSubClient.h>
-#include "MQTTClient.h"
+#include "MQTT.h"
 
 static const char *root_ca PROGMEM = R"EOF(
 -----BEGIN CERTIFICATE-----

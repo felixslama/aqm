@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <BLEDevice.h>
-#include "BLE_CO2_Sense_Net.h"
+#include "BLE.h"
 
 // BLE Service Measurement UUID
 static BLEUUID XENSIV_Measurement("2a13dada-295d-f7af-064f-28eac027639f");
