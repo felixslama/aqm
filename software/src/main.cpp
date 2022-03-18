@@ -114,85 +114,80 @@ void setup() {
 }
 
 void loop() {
-  if (!checkOTA()) {
-    // not very WOH
-    if (failCounter > MAX_FAILS) {
-      ESP.restart();
-    }
+  // not very WOH
+  if (failCounter > MAX_FAILS) {
+    ESP.restart();
+  }
 
-    if (bleServer == nullptr) {
-      bleServer = new BLECO2SenseNetServer(senseNetName); 
-      bleServer->scan();
-    }
+  if (bleServer == nullptr) {
+    bleServer = new BLECO2SenseNetServer(senseNetName); 
+    bleServer->scan();
+  }
 
-    if (!bleServer->found()) {
-      while (!bleServer->found()) {
-        delay(500);
-      }
-      boardAddress = bleServer->getAddressStr();
+  if (!bleServer->found()) {
+    while (!bleServer->found()) {
+      delay(500);
     }
+    boardAddress = bleServer->getAddressStr();
+  }
 
-    if (!bleServer->connected()) {
-      Serial.println("Connecting callbacks...");
-      while (!bleServer->connect(co2NotifyCallback, temperatureNotifyCallback, pressureNotifyCallback, humidityNotifyCallback)) {
-        delay(500);
-        Serial.println("Waiting for callbacks");
-      }
-      boardAddress = bleServer->getAddressStr();
+  if (!bleServer->connected()) {
+    Serial.println("Connecting callbacks...");
+    while (!bleServer->connect(co2NotifyCallback, temperatureNotifyCallback, pressureNotifyCallback, humidityNotifyCallback)) {
+      delay(500);
+      Serial.println("Waiting for callbacks");
     }
+    boardAddress = bleServer->getAddressStr();
+  }
 
-    Serial.print("\nWaiting for sensor data ");
-    int counter = 0;
-    while (!newCo2Value && !newTemperatureValue && !newPressureValue && !newHumidityValue) {
-      Serial.print(".");
-      counter++;
-      delay(200);
-      if (counter == 20) {
-        failCounter++;
-        break;
-      }
+  Serial.print("\nWaiting for sensor data ");
+  int counter = 0;
+  while (!newCo2Value && !newTemperatureValue && !newPressureValue && !newHumidityValue) {
+    Serial.print(".");
+    counter++;
+    delay(200);
+    if (counter == 20) {
+      failCounter++;
+      break;
     }
-    newCo2Value = false;
-    newTemperatureValue = false;
-    newPressureValue = false;
-    newHumidityValue = false;
+  }
+  newCo2Value = false;
+  newTemperatureValue = false;
+  newPressureValue = false;
+  newHumidityValue = false;
+  
+  if (failCounter == 0) 
+  {
+    Serial.println("ok\n");
     
-    if (failCounter == 0) 
-    {
-      Serial.println("ok\n");
-      
-      StaticJsonDocument<1024> doc;
-      doc[String("Address")] = boardAddress;
-      doc[String("Timestamp")] = getDateTimeStr();
+    StaticJsonDocument<1024> doc;
+    doc[String("Address")] = boardAddress;
+    doc[String("Timestamp")] = getDateTimeStr();
 
-      doc[String("CO2")] = co2Value;
+    doc[String("CO2")] = co2Value;
 
-      Serial.println();
-      doc[String("Temperature")] = temperatureValue;
+    Serial.println();
+    doc[String("Temperature")] = temperatureValue;
 
-      doc[String("Pressure")] = pressureValue;
+    doc[String("Pressure")] = pressureValue;
 
-      doc[String("Humidity")] = humidityValue;
+    doc[String("Humidity")] = humidityValue;
 
-      doc[String("IP")] = WiFi.localIP();
+    doc[String("IP")] = WiFi.localIP();
 
-      String payload = String();
-      serializeJson(doc, payload);
-      Serial.printf("\nPayload: %s\n", payload.c_str());
+    String payload = String();
+    serializeJson(doc, payload);
+    Serial.printf("\nPayload: %s\n", payload.c_str());
 
-      //Serial.print("Sending payload...");
-      //bool ok = mqttClient->publish("ble_sensor_values", payload.c_str());
-      //Serial.printf("%s\n", ok? "ok":"failed");
-      //if (!ok) {
-      //  failCounter++;   
-      //}  
-    }
-    else {
-      bleServer->disconnect();
-    } 
-    delay(500);
+    //Serial.print("Sending payload...");
+    //bool ok = mqttClient->publish("ble_sensor_values", payload.c_str());
+    //Serial.printf("%s\n", ok? "ok":"failed");
+    //if (!ok) {
+    //  failCounter++;   
+    //}  
   }
   else {
-    Serial.println("OTA was initiated!");
+    bleServer->disconnect();
   }
+  delay(500);
 }

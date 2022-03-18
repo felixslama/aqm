@@ -1,20 +1,9 @@
 #include <ESPAsyncWebServer.h>
 #include <Update.h>
 #include "Pages.h"
+#include "BLE.h"
 
 AsyncWebServer server(80);
-
-bool initiateOTA = false;
-
-bool checkOTA() {
-  if (initiateOTA == true) {
-    return true;
-  } else return false;
-}
-
-void handleUpdate(AsyncWebServerRequest *request) {
-  request->send(200, "text/html", updateIndex);
-};
 
 void handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final) {
   if (!index) {
@@ -52,7 +41,6 @@ void initWeb(){
     server.on("/doUpdate", HTTP_POST,
         [](AsyncWebServerRequest *request) {},
         [](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final) {
-        initiateOTA = true;
         handleDoUpdate(request, filename, index, data, len, final);}
     );
     server.begin();
