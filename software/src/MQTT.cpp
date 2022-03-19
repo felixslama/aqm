@@ -39,17 +39,14 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 WiFiClientSecure _wifiClient;
 PubSubClient _mqttClient(_wifiClient);
 
-
 MQTTClient::MQTTClient(const char* clientId, const char* mqttServer, int mqttPort, 
                        const char* mqttUsername, const char* mqttPassword, 
                        std::function<void (char *, uint8_t *, unsigned int)> callback) {
-
   _clientId = clientId;
   _mqttServer = mqttServer;
   _mqttPort = mqttPort;
   _mqttUsername = mqttUsername;
   _mqttPassword = mqttPassword;
-    
   _wifiClient.setCACert(root_ca);
   _mqttClient.setServer(_mqttServer, _mqttPort);
   _mqttClient.setCallback(callback);
@@ -60,22 +57,17 @@ bool MQTTClient::connect() {
     reconnect();
   }
   _mqttClient.loop();
-  
   return true;
 }
 
 void MQTTClient::reconnect() {
-  // Loop until we're reconnected
   while (!_mqttClient.connected()) {
     Serial.print("Attempting MQTT connection...");
-    // Attempt to connect
     if (_mqttClient.connect(_clientId,_mqttUsername, _mqttPassword)) {
       Serial.println("connected");
-    } 
+    }
     else {
-      Serial.print("failed, rc=");
-      Serial.print(_mqttClient.state());
-      Serial.println(" try again in 5 seconds");   // Wait 5 seconds before retrying
+      Serial.println("failed, retry after 5s");
       delay(5000);
     }
   }
@@ -100,4 +92,3 @@ bool MQTTClient::publish(const char* topic, const char* payload) {
   }
   return true;
 }
-

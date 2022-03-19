@@ -19,7 +19,6 @@ class BLECO2SenseNetServer: public BLEAdvertisedDeviceCallbacks {
         BLERemoteCharacteristic* _pressureCharacteristic;
         BLERemoteCharacteristic* _temperatureCharacteristic;
         BLERemoteCharacteristic* _humidityCharacteristic;
-
     public:
         BLECO2SenseNetServer(const char* deviceName);
         void scan();
