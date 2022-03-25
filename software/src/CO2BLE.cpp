@@ -25,16 +25,17 @@ BLECO2SenseNetServer::BLECO2SenseNetServer(const char* deviceName) {
 void BLECO2SenseNetServer::scan() {
     NimBLEDevice::init("");
     NimBLEScan* pBLEScan = NimBLEDevice::getScan();
+    pBLEScan->setAdvertisedDeviceCallbacks(this);
     pBLEScan->setActiveScan(true);
     pBLEScan->start(30);
 }
 
-void BLECO2SenseNetServer::onResult(NimBLEAdvertisedDevice advertisedDevice) {
-    if (advertisedDevice.getName() == _deviceName) {
-        advertisedDevice.getScan()->stop();
-        advertisedDevice.getScan()->clearResults();
-        advertisedDevice.getScan()->setActiveScan(false);
-        _serverAddress = new NimBLEAddress(advertisedDevice.getAddress());
+void BLECO2SenseNetServer::onResult(NimBLEAdvertisedDevice* advertisedDevice) {
+    if (advertisedDevice->getName() == _deviceName) {
+        advertisedDevice->getScan()->stop();
+        advertisedDevice->getScan()->clearResults();
+        advertisedDevice->getScan()->setActiveScan(false);
+        _serverAddress = new NimBLEAddress(advertisedDevice->getAddress());
         _found = true;
         Serial.println("BLE SenseNet found!");
     }
