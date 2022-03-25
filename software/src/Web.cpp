@@ -1,7 +1,6 @@
 #include <ESPAsyncWebServer.h>
 #include <Update.h>
 #include "Pages.h"
-#include "BLE.h"
 
 AsyncWebServer server(80);
 
