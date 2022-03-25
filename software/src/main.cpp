@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "BLE.h"
+#include "CO2BLE.h"
 #include <ArduinoJson.h>
 #include "WiFiAdapter.h"
 #include "MQTT.h"
@@ -30,7 +30,7 @@ boolean newSampleRateValue = false;
 
 BLECO2SenseNetServer* bleServer = nullptr;
 WiFiAdapter* wifi = nullptr;
-//MQTTClient* mqttClient = nullptr;
+MQTTClient* mqttClient = nullptr;
 
 boolean enterpriseWifi = false;
 
@@ -38,14 +38,14 @@ String boardAddress = "";
 int mqttPort = 8883;
 
 // When the BLE Server sends a new CO2 reading with the notify property
-static void co2NotifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
+static void co2NotifyCallback(NimBLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
   // store the CO2 value
   co2Value = ((pData[1] & 0xFF) << 8) + (pData[0] & 0xFF);
   newCo2Value = true;
 }
 
 // When the BLE Server sends a new temerature reading with the notify property
-static void temperatureNotifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
+static void temperatureNotifyCallback(NimBLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
   int temp_low = ((pData[3] & 0xFF) << 8) + (pData[2] & 0xFF);
   int temp_high = ((pData[1] & 0xFF) << 8) + (pData[0] & 0xFF);
   
@@ -55,14 +55,14 @@ static void temperatureNotifyCallback(BLERemoteCharacteristic* pBLERemoteCharact
 }
 
 // When the BLE Server sends a new pressure reading with the notify property
-static void pressureNotifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
+static void pressureNotifyCallback(NimBLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
   int pressure = ((pData[3] & 0xFF) << 24) + ((pData[2] & 0xFF) << 16) + ((pData[1] & 0xFF) << 8) + (pData[0] & 0xFF);
   pressureValue = (double)pressure / 100;
   newPressureValue = true;
 }
 
 // When the BLE Server sends a new humidity reading with the notify property
-static void humidityNotifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, 
+static void humidityNotifyCallback(NimBLERemoteCharacteristic* pBLERemoteCharacteristic, 
                               uint8_t* pData, size_t length, bool isNotify) {
   int hum_low = ((pData[3] & 0xFF) << 8) + (pData[2] & 0xFF);
   int hum_high = ((pData[1] & 0xFF) << 8) + (pData[0] & 0xFF);
@@ -104,13 +104,12 @@ void setup() {
     Serial.println("Starting HTTP Server");
     initWeb();
     Serial.println("HTTP server started");
+    Serial.println("Connecting MQTT Broker");
+    mqttClient = new MQTTClient(boardAddress.c_str(), mqttServer, mqttPort, mqttUsername, mqttPassword, mqttCallback);
+    if (mqttClient->connect()) {
+      Serial.println("MQTT Broker connected");
+    }
   }
-
-  //Serial.println("Connecting MQTT Broker");
-  //mqttClient = new MQTTClient(boardAddress.c_str(), mqttServer, mqttPort, mqttUsername, mqttPassword, mqttCallback);
-  //if (mqttClient->connect()) {
-  //  Serial.println("MQTT Broker connected");
-  //}
 }
 
 void loop() {
@@ -120,7 +119,7 @@ void loop() {
   }
 
   if (bleServer == nullptr) {
-    bleServer = new BLECO2SenseNetServer(senseNetName); 
+    bleServer = new BLECO2SenseNetServer(senseNetName);
     bleServer->scan();
   }
 
