@@ -113,14 +113,11 @@ void setup() {
 }
 
 void loop() {
-  // not very WOH
-  if (failCounter > MAX_FAILS) {
-    ESP.restart();
-  }
 
   if (bleServer == nullptr) {
     bleServer = new BLECO2SenseNetServer(senseNetName);
     bleServer->scan();
+    Serial.println("Scanning initiated.");
   }
 
   if (!bleServer->found()) {
@@ -178,12 +175,12 @@ void loop() {
     serializeJson(doc, payload);
     Serial.printf("\nPayload: %s\n", payload.c_str());
 
-    //Serial.print("Sending payload...");
-    //bool ok = mqttClient->publish("ble_sensor_values", payload.c_str());
-    //Serial.printf("%s\n", ok? "ok":"failed");
-    //if (!ok) {
-    //  failCounter++;   
-    //}  
+    Serial.print("Sending payload...");
+    bool ok = mqttClient->publish("ble_sensor_values", payload.c_str());
+    Serial.printf("%s\n", ok? "ok":"failed");
+    if (!ok) {
+      failCounter++;   
+    }  
   }
   else {
     bleServer->disconnect();

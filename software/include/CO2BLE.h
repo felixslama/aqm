@@ -24,7 +24,7 @@ class BLECO2SenseNetServer: public NimBLEAdvertisedDeviceCallbacks
     public:
         BLECO2SenseNetServer(const char* deviceName);
         void scan();
-        void onResult(NimBLEAdvertisedDevice advertisedDevice);
+        void onResult(NimBLEAdvertisedDevice* advertisedDevice);
         String getAddressStr();
         bool found();
         bool connect(notify_callback co2NotifyCallback, 
