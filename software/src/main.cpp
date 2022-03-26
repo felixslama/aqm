@@ -102,7 +102,8 @@ void setup() {
 
   if (connectedToWifi) {
     Serial.println("Starting HTTP Server");
-    initWeb();
+    //initWeb();
+    initHTTPS();
     Serial.println("HTTP server started");
     Serial.println("Connecting MQTT Broker");
     mqttClient = new MQTTClient(boardAddress.c_str(), mqttServer, mqttPort, mqttUsername, mqttPassword, mqttCallback);
@@ -113,7 +114,6 @@ void setup() {
 }
 
 void loop() {
-
   if (bleServer == nullptr) {
     bleServer = new BLECO2SenseNetServer(senseNetName);
     bleServer->scan();
