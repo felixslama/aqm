@@ -50,8 +50,15 @@ void initWeb(){
 }
 
 using namespace httpsserver;
-SSLCert * cert;
-HTTPSServer * secureServer;
+
+#include "cert.h"
+#include "private_key.h"
+
+SSLCert cert = SSLCert(
+  example_crt_DER, example_crt_DER_len,
+  example_key_DER, example_key_DER_len
+);
+HTTPSServer secureServer = HTTPSServer(&cert);
 #if CONFIG_FREERTOS_UNICORE
 #define ARDUINO_RUNNING_CORE 0
 #else
@@ -59,6 +66,7 @@ HTTPSServer * secureServer;
 #endif
 // Declare some handler functions for the various URLs on the server
 void handleRoot(HTTPRequest * req, HTTPResponse * res);
+void handleUpdate(HTTPRequest * req, HTTPResponse * res);
 void handle404(HTTPRequest * req, HTTPResponse * res);
 void serverTask(void *params);
 void initHTTPS(){
@@ -67,35 +75,50 @@ void initHTTPS(){
 }
 
 void serverTask(void *params){
+  Serial.println("woah 1");
+  /*
   cert = new SSLCert();
+  Serial.println("woah 2");
+  
   int createCertResult = createSelfSignedCert(
     *cert,
     KEYSIZE_2048,
     "CN=myesp32.local,O=FancyCompany,C=DE",
     "20190101000000",
     "20300101000000"
-  );
+  ); 
+  SSLCert startCert = SSLCert(
+    cert->getCertData(),cert->getCertLength(),
+    cert->getPKData(),cert->getPKLength()
+  ); */
+  Serial.println("woah 3");
+  /*
   if (createCertResult != 0) {
     Serial.printf("Cerating certificate failed. Error Code = 0x%02X, check SSLCert.hpp for details", createCertResult);
     return;
-  }
+  }else{
+    Serial.println("woah good cert");
+  }*/
+  
   Serial.println("Creating the certificate was successful");
-  secureServer = new HTTPSServer(cert);
+  
   ResourceNode * nodeRoot    = new ResourceNode("/", "GET", &handleRoot);
   ResourceNode * node404     = new ResourceNode("", "GET", &handle404);
-
+  ResourceNode * nodeUpdate  = new ResourceNode("/update", "GET",&handleUpdate);
+  
   // Add the root node to the server
-  secureServer->registerNode(nodeRoot);
+  secureServer.registerNode(nodeRoot);
+  secureServer.registerNode(nodeUpdate);
   // Add the 404 not found node to the server.
-  secureServer->setDefaultNode(node404);
-
+  secureServer.setDefaultNode(node404);
+  
   Serial.println("Starting server...");
-  secureServer->start();
-  if (secureServer->isRunning()) {
+  secureServer.start();
+  Serial.println("woah after start");
+  if (secureServer.isRunning()) {
     Serial.println("Server ready.");
     while(true){
-      secureServer->loop();
-      Serial.println("woah");
+      secureServer.loop();
     }
   }
 }
@@ -107,17 +130,10 @@ void handleRoot(HTTPRequest * req, HTTPResponse * res) {
 
   // The response implements the Print interface, so you can use it just like
   // you would write to Serial etc.
-  res->println("<!DOCTYPE html>");
-  res->println("<html>");
-  res->println("<head><title>Hello World!</title></head>");
-  res->println("<body>");
-  res->println("<h1>Hello World!</h1>");
-  res->print("<p>Your server is running for ");
-  // A bit of dynamic data: Show the uptime
-  res->print((int)(millis()/1000), DEC);
-  res->println(" seconds.</p>");
-  res->println("</body>");
-  res->println("</html>");
+  res->println(aqmIndex);
+}
+void handleUpdate(HTTPRequest * req, HTTPResponse * res) {
+  res->println(updateIndex);
 }
 
 void handle404(HTTPRequest * req, HTTPResponse * res) {
@@ -138,4 +154,6 @@ void handle404(HTTPRequest * req, HTTPResponse * res) {
   res->println("<head><title>Not Found</title></head>");
   res->println("<body><h1>404 Not Found</h1><p>The requested resource was not found on this server.</p></body>");
   res->println("</html>");
+
+  
 }
