@@ -93,6 +93,7 @@ void handleRoot(HTTPRequest * req, HTTPResponse * res) {
   // you would write to Serial etc.
   res->println(aqmIndex);
 }
+
 void handleUpdate(HTTPRequest * req, HTTPResponse * res) {
   res->println(updateIndex);
 }
@@ -118,14 +119,27 @@ void handle404(HTTPRequest * req, HTTPResponse * res) {
 
   
 }
-void handleDoUpdate(HTTPRequest * req, HTTPResponse * res){
-  res->setHeader("Content-Type", "text/html");
-  byte buffer [256];
-  while(!(req->requestComplete())){
-    size_t s = req->readBytes(buffer,256);
-    res->write(buffer,s);
-    res->println(s);
-    Serial.println("loop");
+
+void updateFirmware(uint8_t *data, size_t len){
+  if (Update.write(data, len) == len) {
+    int progress = Update.progress() / 10000;
+    Serial.println(progress);
+  } else {
+    Update.printError(Serial);
   }
-  Serial.println("no while loop");
+  Serial.print('.');
+  return;
+}
+
+void handleDoUpdate(HTTPRequest * req, HTTPResponse * res) {
+  Update.begin(UPDATE_SIZE_UNKNOWN);
+  uint8_t buffer[256] = { 0 };
+  while (!(req->requestComplete())) {
+    size_t size = req->readBytes(buffer, 256);
+    if(size) {
+      int c = req->readBytes(buffer, ((size > sizeof(buffer)) ? sizeof(buffer) : size));
+      updateFirmware(buffer, c);
+    }
+    delay(1);
+  }
 }
