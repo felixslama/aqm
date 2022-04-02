@@ -4,6 +4,8 @@
 #include <SSLCert.hpp>
 #include <HTTPRequest.hpp>
 #include <HTTPResponse.hpp>
+#include <HTTPMultipartBodyParser.hpp>
+#include <HTTPURLEncodedBodyParser.hpp>
 
 using namespace httpsserver;
 
@@ -26,6 +28,7 @@ void handleUpdate(HTTPRequest * req, HTTPResponse * res);
 void handle404(HTTPRequest * req, HTTPResponse * res);
 void handleDoUpdate(HTTPRequest * req, HTTPResponse * res);
 void serverTask(void *params);
+HTTPBodyParser *parser;
 void initHTTPS(){
   Serial.println("init");
   xTaskCreatePinnedToCore(serverTask, "https443", 6144, NULL, 1, NULL, ARDUINO_RUNNING_CORE);
@@ -132,10 +135,15 @@ void updateFirmware(uint8_t *data, size_t len){
 }
 
 void handleDoUpdate(HTTPRequest * req, HTTPResponse * res) {
+  parser = new HTTPMultipartBodyParser(req);
+  //HTTPURLEncodedBodyParser parser(req);
   Update.begin(UPDATE_SIZE_UNKNOWN);
   uint8_t buffer[256] = { 0 };
+  parser->nextField();
   while (!(req->requestComplete())) {
-    size_t size = req->readBytes(buffer, 256);
+    size_t size = parser->read((byte *)buffer, 256);
+    Serial.println(size);
+    Serial.println((char*)buffer);
     if(size) {
       int c = req->readBytes(buffer, ((size > sizeof(buffer)) ? sizeof(buffer) : size));
       updateFirmware(buffer, c);
