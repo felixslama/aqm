@@ -6,6 +6,8 @@
 - OTA Code
 - MQTT Code
 - BLE Code
+- SSL Connection
+- HTTPS OTA
 
 # What Doesnt Work:
 

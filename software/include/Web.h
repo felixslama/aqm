@@ -1,1 +1,2 @@
-void initWeb();
+void initHTTPS();
+bool checkOTAStatus();
