@@ -62,7 +62,7 @@ const char aqmIndex[] PROGMEM = R"=====(
     </head>
     <body>
         <section id="mainContainer">
-            <h1>AQM-MAIN</h1>
+            <h1>INFINEON-AQM-MAIN</h1>
             <p><a href="/update">Update Page</a></p>
         </section>
     </body>
@@ -145,48 +145,6 @@ const char updateIndex[] PROGMEM = R"=====(
             </form>
             <div id="update"></div>
         </section>
-    </body>
-</html>
-)=====";
-const char updateDoneIndex[] PROGMEM = R"=====(
-<!DOCTYPE html>
-<html>
-    <head>
-        <style>
-            * {
-                background-color: black;
-                font-family: Arial, Helvetica, sans-serif
-            }
-            p, h1, label {
-                color: white;
-                font-size: 40px;
-            }
-            a {
-                text-decoration: none;
-                color: white;
-            }
-            @media (pointer:none), (pointer:coarse) {
-                p, h1, label {
-                    font-size: 70px;
-                }
-            }
-        </style>
-        <script>
-            let counter = 4;
-            setTimeout(refresh, 5000);
-            var upInt = setInterval(updateNumber, 1000);
-            function refresh() {
-                clearInterval(upInt);
-                window.location.replace("/");
-            }
-            function updateNumber() {
-                document.getElementById("updateText").innerHTML = "Update done! Refreshing in " + counter + " ..."
-                counter--;
-            }
-        </script>
-    </head>
-    <body>
-        <p id="updateText">Update done! Refreshing in 5 ...</p>
     </body>
 </html>
 )=====";
