@@ -1,53 +1,9 @@
 #include <Update.h>
 #include "Pages.h"
-#include <ESPAsyncWebServer.h>
 #include <HTTPSServer.hpp>
 #include <SSLCert.hpp>
 #include <HTTPRequest.hpp>
 #include <HTTPResponse.hpp>
-
-AsyncWebServer server(80);
-
-void handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final) {
-  if (!index) {
-    int cmd = (filename.indexOf(F(".spiffs.bin")) > -1 ) ? U_SPIFFS : U_FLASH;
-    if (cmd == U_FLASH && !(filename.indexOf(F(".bin")) > -1) ) return;
-    if (!Update.begin(UPDATE_SIZE_UNKNOWN, cmd)) {
-      Update.printError(Serial);
-    }
-  }
-  if (Update.write(data, len) == len) {
-    int progress = Update.progress() / 10000;
-    Serial.println(progress);
-  } else {
-    Update.printError(Serial);
-  }
-  if (final) {    
-    if (!Update.end(true)){
-      Update.printError(Serial);
-    } else {
-      AsyncWebServerResponse *response = request->beginResponse(200, "text/html", updateDoneIndex); 
-      request->send(response); 
-      delay(100);
-      ESP.restart();
-    }
-  }
-}
-
-void initWeb(){
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(200, "text/html", aqmIndex);
-    });
-    server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(200, "text/html", updateIndex);
-    });
-    server.on("/doUpdate", HTTP_POST,
-        [](AsyncWebServerRequest *request) {},
-        [](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final) {
-        handleDoUpdate(request, filename, index, data, len, final);}
-    );
-    server.begin();
-}
 
 using namespace httpsserver;
 
@@ -68,6 +24,7 @@ HTTPSServer secureServer = HTTPSServer(&cert);
 void handleRoot(HTTPRequest * req, HTTPResponse * res);
 void handleUpdate(HTTPRequest * req, HTTPResponse * res);
 void handle404(HTTPRequest * req, HTTPResponse * res);
+void handleDoUpdate(HTTPRequest * req, HTTPResponse * res);
 void serverTask(void *params);
 void initHTTPS(){
   Serial.println("init");
@@ -105,10 +62,14 @@ void serverTask(void *params){
   ResourceNode * nodeRoot    = new ResourceNode("/", "GET", &handleRoot);
   ResourceNode * node404     = new ResourceNode("", "GET", &handle404);
   ResourceNode * nodeUpdate  = new ResourceNode("/update", "GET",&handleUpdate);
+  ResourceNode * nodeUpdatePost = new ResourceNode("/update", "POST",&handleDoUpdate);
+  ResourceNode * nodeUpdatePut = new ResourceNode("/update", "PUT",&handleDoUpdate);
   
   // Add the root node to the server
   secureServer.registerNode(nodeRoot);
   secureServer.registerNode(nodeUpdate);
+  secureServer.registerNode(nodeUpdatePost);
+  secureServer.registerNode(nodeUpdatePut);
   // Add the 404 not found node to the server.
   secureServer.setDefaultNode(node404);
   
@@ -156,4 +117,15 @@ void handle404(HTTPRequest * req, HTTPResponse * res) {
   res->println("</html>");
 
   
+}
+void handleDoUpdate(HTTPRequest * req, HTTPResponse * res){
+  res->setHeader("Content-Type", "text/html");
+  byte buffer [256];
+  while(!(req->requestComplete())){
+    size_t s = req->readBytes(buffer,256);
+    res->write(buffer,s);
+    res->println(s);
+    Serial.println("loop");
+  }
+  Serial.println("no while loop");
 }
