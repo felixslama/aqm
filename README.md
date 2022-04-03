@@ -5,3 +5,5 @@
 ## TODO:
 - implement OTA-Updater
 - figure out good method to create certs
+---
+To create new cert, just run createcert.sh in project folder
