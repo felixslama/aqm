@@ -95,15 +95,16 @@ void setup() {
   
   if (connectedToWifi) {
     Serial.println("WiFi connected");
+    
     setDateTime();
     Serial.println("Local Time synchronized");
     Serial.println(getDateTimeStr());
-  }
-
-  if (connectedToWifi) {
+    
     Serial.println("Starting HTTP Server");
     initHTTPS();
+    setupBasicWebAuth(webAdminUser, webAdminPassword);
     Serial.println("HTTP server started");
+    
     Serial.println("Connecting MQTT Broker");
     mqttClient = new MQTTClient(boardAddress.c_str(), mqttServer, mqttPort, mqttUsername, mqttPassword, mqttCallback);
     if (mqttClient->connect()) {
