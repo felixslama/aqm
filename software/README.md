@@ -8,6 +8,7 @@
 - BLE Code
 - SSL Connection
 - HTTPS OTA
+- Basic Web Authentication
 
 # What Doesnt Work:
 

@@ -14,3 +14,7 @@ const char* senseNetName = "BLE_CO2_SensNet";
 const char* mqttServer = "";
 const char* mqttUsername = "";
 const char* mqttPassword = "";
+
+// webinterface authentication
+const char* webAdminUser = "";
+const char* webAdminPassword = "";
