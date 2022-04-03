@@ -7,13 +7,14 @@
 #include <HTTPMultipartBodyParser.hpp>
 #include "Web.h"
 #include "Pages.h"
-#include "Cert.h"
+#include "cert.h"
+#include "key.h"
 
 using namespace httpsserver;
 
 SSLCert cert = SSLCert(
-  example_crt_DER, example_crt_DER_len,
-  example_key_DER, example_key_DER_len
+  AQM_crt_DER, AQM_crt_DER_len,
+  AQM_key_DER, AQM_key_DER_len
 );
 
 HTTPSServer secureServer = HTTPSServer(&cert);
