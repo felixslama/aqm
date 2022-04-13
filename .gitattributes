@@ -1,2 +1,4 @@
-/**
-!/software/**
+hardware/ export-ignore
+README.md export-ignore
+pushAll.sh export-ignore
+.gitattributes export-ignore
