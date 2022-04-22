@@ -62,7 +62,7 @@ const char aqmIndex[] PROGMEM = R"=====(
     </head>
     <body>
         <section id="mainContainer">
-            <h1>INFINEON-AQM-MAIN</h1>
+            <h1>AQM-DEMO-MAIN</h1>
             <p><a href="/update">Update Page</a></p>
         </section>
     </body>
@@ -137,7 +137,7 @@ const char updateIndex[] PROGMEM = R"=====(
     </head>
     <body>
         <section id="mainContainer">
-            <h1>AQM-OTA</h1>
+            <h1>AQM-DEMO-OTA</h1>
             <p>Only *.bin files will work!!</p>
             <form method='POST' action='/update' enctype='multipart/form-data' target='_self' onsubmit='notify_update()'>
                 <input type='file' name='update' accept=".bin" required><br>
